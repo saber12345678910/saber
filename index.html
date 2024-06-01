@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saber</title>
+
+    <link rel="shortcut icon" href="assets/img/logo.ico" type="image/x-icon">
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Custom CSS for close button -->
+    <style>
+        /* Close button style */
+        .btn-close {
+            background-color: lightgreen;
+            animation: glow 1s infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                box-shadow: 0 0 10px lightgreen, 0 0 20px lightgreen, 0 0 30px lightgreen;
+            }
+
+            to {
+                box-shadow: 0 0 20px lightgreen, 0 0 30px lightgreen, 0 0 40px lightgreen;
+            }
+        }
+
+        /* Glowing line style */
+        .glowing-line {
+            height: 2px;
+            background-color: lightgreen;
+            margin: 10px 0;
+            animation: glow-line 1s infinite alternate;
+        }
+
+        @keyframes glow-line {
+            from {
+                box-shadow: 0 0 10px lightgreen, 0 0 20px lightgreen, 0 0 30px lightgreen;
+            }
+
+            to {
+                box-shadow: 0 0 20px lightgreen, 0 0 30px lightgreen, 0 0 40px lightgreen;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <section id="Oval" class="mb-4">
+
+            <div class="row">
+                <div class="col-md-1"></div>
+                <div class="col-md-10">
+                    <div class="d-flex justify-content-center align-items-center" style="height: 80vh;">
+
+                        <canvas id="canvasOne" width="700" height="420" style="position: absolute;"></canvas>
+
+                        <div id="SaberHood">
+
+                            <div class="square">
+                                <span class="circle"></span>
+                                <span class="circle"></span>
+                                <span class="circle"></span>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="col-md-12 mt-4 pt-4">
+                        <div class="text-center">
+                            <div id="TextInput" class="d-flex">
+
+                                <input type="text" class="input-field" name="chatbox" id="chatbox"
+                                    placeholder="type here ... ">
+                                <button id="SendBtn" class="glow-on-hover" onclick="sendQuestion()"><i
+                                        class="bi bi-send"></i></button>
+                                <button id="MicBtn" class="glow-on-hover"><i class="bi bi-mic"></i></button>
+                                <button id="ChatBtn" class="glow-on-hover" data-bs-toggle="offcanvas"
+                                    data-bs-target="#offcanvasScrolling" aria-controls="offcanvasScrolling"><i
+                                        class="bi bi-chat-dots"></i></button>
+                                <button id="SettingsBtn" class="glow-on-hover"><i class="bi bi-gear"></i></button>
+
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="col-md-1"></div>
+            </div>
+
+        </section>
+    </div>
+
+    <div class="offcanvas offcanvas-start chat-canvas" data-bs-scroll="true" data-bs-backdrop="false" tabindex="-1"
+        id="offcanvasScrolling" aria-labelledby="offcanvasScrollingLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title text-white" id="offcanvasScrollingLabel">Chats
+                <button id="NewChatBtn" class="glow-on-hover" onclick="startNewChat()"><i class="bi bi-plus"></i></button>
+            </h5>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"
+                aria-label="Close"></button>
+        </div>
+        <div id="chat-canvas-body" class="offcanvas-body">
+            <!-- Chatting code here -->
+            <div id="chat-messages"></div>
+        </div>
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+
+    <!-- Bootstrap Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
+
+    <!-- Mistral AI code -->
+    <script>
+        document.getElementById("chatbox").addEventListener("keyup", function(event) {
+            if (event.keyCode === 13) { // Enter key code is 13
+                event.preventDefault();
+                sendQuestion();
+            }
+        });
+
+        async function sendQuestion() {
+            let question = document.getElementById('chatbox').value;
+            // Check if the input starts with "User: "
+            if (question.toLowerCase().startsWith('user:')) {
+                // If it starts with "User:", remove it
+                question = question.substring(5).trim(); // Remove "User:" and trim extra spaces
+            }
+            const response = await generate(question);
+            addMessage('User', question, 'gold'); // Display the user's input without "User:" prefix
+            addMessage('Saber', response, 'gold'); // Change bot to Saber
+
+            // Add glowing line after each message
+            addGlowingLine();
+
+            // Reset the input field
+            document.getElementById('chatbox').value = '';
+        }
+
+        function addMessage(sender, message, color) {
+            const chatMessages = document.getElementById('chat-messages');
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', sender === 'User' ? 'user-message' : 'bot-message');
+            messageElement.innerHTML = `<strong>${sender}: </strong>${message}`; // Bold sender's name
+            if (color) {
+                messageElement.style.color = color;
+            }
+            chatMessages.appendChild(messageElement);
+        }
+
+        function addGlowingLine() {
+            const chatMessages = document.getElementById('chat-messages');
+            const line = document.createElement('hr');
+            line.classList.add('glowing-line');
+            chatMessages.appendChild(line);
+        }
+
+        async function generate(prompt, temperature = 0.9, max_new_tokens = 512, top_p = 0.95,
+            repetition_penalty = 1.0) {
+            const formattedPrompt = `[INST]${prompt}[/INST]`;
+            const response = await fetch(
+                "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.1", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": "Bearer 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",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        "inputs": formattedPrompt,
+                        "parameters": {
+                            "temperature": temperature,
+                            "max_new_tokens": max_new_tokens,
+                            "top_p": top_p,
+                            "repetition_penalty": repetition_penalty,
+                            "do_sample": true
+                        }
+                    })
+                });
+            const data = await response.json();
+            let answer = data[0].generated_text;
+            // Remove [INST] and [/INST] tags from the answer
+            answer = answer.replace(/\[INST\]/g, '').replace(/\[\/INST\]/g, '');
+            return answer;
+        }
+
+        function startNewChat() {
+            document.getElementById('chat-messages').innerHTML = '';
+        }
+    </script>
+</body>
+
+</html>
